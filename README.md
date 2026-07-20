@@ -1,4 +1,5 @@
-# Microgridspy TES integration
+# Microgridspy-thermal-demand-integration
+
 Compared to the standard MicroGridSpy model, the developed extension explicitly introduces the thermal demand of a cold storage room as an additional system load, alongside the traditional electrical load.
 
 The thermal demand represents the cooling requirement needed to maintain the internal temperature of the cold room and its stored products at the desired set-point. Cooling can be provided through two alternative configurations:
@@ -241,4 +242,64 @@ where:
 - $f_{\text{OM, TES comp}}$ = OM cost fraction [-]
 
 
+### Time-varying TES COP
 
+In addition to the standard TES formulation, the coefficient of performance of the TES compressor can be modeled either as a fixed value or as a time-varying parameter depending on ambient temperature.
+
+#### Fixed COP Mode
+
+When the fixed option is selected, a constant COP value is assumed for all time steps:
+
+$$
+COP_{\text{TES}}(t) = COP_{\text{fixed}}
+$$
+
+#### Temperature-dependent COP
+
+When the `carnot_tmy` mode is activated the TES COP is computed dynamically from the ambient temperature using a simplified Carnot relationship:
+
+$$
+COP_{\text{TES}}(t) = \alpha \cdot \frac{T_{\text{cold}}}{\max\left(T_{\text{warm}}(t) - T_{\text{cold}},\;1\right)}
+$$
+
+where:
+
+- $COP_{\text{TES}}(t)$ = coefficient of performance of the TES compressor at time step $t$ [-]  
+- $\alpha$ = efficiency correction factor accounting for non-ideal behavior [-]  
+- $T_{\text{cold}}$ = cold-side temperature of the refrigeration cycle [K]  
+- $T_{\text{warm}}(t)$ = ambient temperature at time step $t$ [K]
+
+### TES Auxiliary Pump Consumption
+
+During TES discharge, an auxiliary circulation pump is assumed to transfer the cooling energy from the ice storage to the cold room heat exchanger.  
+The pump electricity consumption is modeled as proportional to the cooling energy delivered by the TES.
+
+The TES cooling output is:
+
+$$
+Q_{\text{TES}}(t) =
+\dot{m}_{\text{discharge}}(t)
+\cdot
+Q_{\text{per kg}}
+$$
+
+The auxiliary pump electrical consumption is defined as:
+
+
+$$
+E_{\text{pump}}(t) = f_{\text{pump}} \cdot Q_{\text{TES}}(t)
+$$
+
+
+
+where:
+
+- $E_{\text{pump}}(t)$ = auxiliary electrical consumption of the TES circulation pump [Wh]  
+- $f_{\text{pump}}$ = specific pump electricity consumption factor [-]  
+- $Q_{\text{TES}}(t)$ = cooling energy delivered by TES discharge [Wh$_{th}$]
+
+The pump consumption is included in the total additional electrical demand of the cooling system:
+
+$$
+E_{\text{extra}}(t) = E_{\text{direct,compressor}}(t) + E_{\text{TES}}(t) + E_{\text{pump}}(t)
+$$
